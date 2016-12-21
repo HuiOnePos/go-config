@@ -26,6 +26,7 @@ import (
 )
 
 var ErrMismatchConf = errors.New("Your conf is wrong:")
+var Mod string
 
 type configuration struct {
 	data map[interface{}]interface{}
@@ -163,6 +164,10 @@ func WriteConfigFile(filePath string, perm os.FileMode) error {
 // would return "localhost/test". If the variable value is a json object/list, this
 // object will also be expanded.
 func Get(key string) (interface{}, error) {
+	if Mod == "" {
+		Mod = "dev"
+	}
+	key = Mod + ":" + key
 	keys := strings.Split(key, ":")
 	configs.RLock()
 	defer configs.RUnlock()
@@ -254,6 +259,17 @@ func GetString(key string) (string, error) {
 	return "", &invalidValue{key, "string|int|int64"}
 }
 
+// GetStringDefault works like Get
+//
+// It returns default if the key is undefined or if it is not a string.
+func GetStringDefault(key, defaul string) string {
+	res, err := GetString(key)
+	if err != nil {
+		res = defaul
+	}
+	return res
+}
+
 // GetInt works like Get, but does an int type assertion and attempts string
 // conversion before returning the value.
 //
@@ -275,6 +291,17 @@ func GetInt(key string) (int, error) {
 		}
 	}
 	return 0, &invalidValue{key, "int"}
+}
+
+// GetIntDefault works like Get
+//
+// It returns default if the key is undefined or if it is not a int.
+func GetIntDefault(key string, defaul int) int {
+	res, err := GetInt(key)
+	if err != nil {
+		res = defaul
+	}
+	return res
 }
 
 // GetFloat works like Get, but does a float type assertion and attempts string
